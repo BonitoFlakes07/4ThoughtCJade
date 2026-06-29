@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4ThoughtCJad3</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange: #FF4500;
+            --orange-hover: #E03D00;
+            --bg: #DAE0E6;
+            --card-bg: #FFFFFF;
+            --nav-bg: #FFFFFF;
+            --border: #EDEFF1;
+            --text: #1C1C1C;
+            --muted: #878A8C;
+            --blue: #0079D3;
+            --teal: #0DD3BB;
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── NAVBAR ── */
+        #navbar {
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        #logo a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--orange);
+            letter-spacing: -0.5px;
+        }
+
+        #logo .icon {
+            width: 32px;
+            height: 32px;
+            background: var(--orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        #board-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        #board-nav::-webkit-scrollbar { display: none; }
+
+        #board-nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        #board-nav a:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        #nav-right a {
+            background: var(--orange);
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        #nav-right a:hover { background: var(--orange-hover); }
+
+        /* ── PAGE WRAPPER ── */
+        #page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        /* ── SIDEBAR ── */
+        #sidebar {
+            width: 270px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 68px;
+        }
+
+        .sidebar-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-card h3 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .sidebar-board-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 6px;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .sidebar-board-link:hover { background: var(--bg); }
+
+        .board-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--orange), var(--teal));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* ── MAIN CONTENT ── */
+        #main { flex: 1; min-width: 0; }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .page-header p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .btn-primary {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .btn-primary:hover { background: var(--orange-hover); }
+
+        /* ── POST FORM ── */
+        .post-form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .post-form-card h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .form-row {
+            margin-bottom: 12px;
+        }
+
+        .form-row label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 5px;
+        }
+
+        .form-row input[type="text"],
+        .form-row textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text);
+            background: var(--bg);
+            transition: border-color 0.15s;
+            resize: vertical;
+        }
+
+        .form-row input[type="text"]:focus,
+        .form-row textarea:focus {
+            outline: none;
+            border-color: var(--blue);
+            background: white;
+        }
+
+        /* ── FILE UPLOAD BUTTON ── */
+.file-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.file-upload-wrapper input[type="file"] {
+    display: none;
+}
+
+.file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.file-upload-btn:hover {
+    background: var(--bg);
+    border-color: #a0a0a0;
+}
+
+.file-upload-btn svg {
+    flex-shrink: 0;
+}
+
+.file-upload-name {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-upload-clear {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 2px;
+    display: none;
+}
+
+.file-upload-clear:hover { color: var(--orange); }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        /* ── MASONRY GRID (Pinterest-style) ── */
+        .masonry-grid {
+            columns: 3;
+            column-gap: 16px;
+        }
+
+        @media (max-width: 900px) { .masonry-grid { columns: 2; } }
+        @media (max-width: 600px) { .masonry-grid { columns: 1; } }
+
+        /* ── THREAD CARD ── */
+        .thread-card {
+            break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s, transform 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .thread-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+            transform: translateY(-2px);
+        }
+
+        .thread-card-image {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .thread-card-body {
+            padding: 14px;
+        }
+
+        .thread-card-board {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .thread-card-subject {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.35;
+            margin-bottom: 6px;
+        }
+
+        .thread-card-content {
+            font-size: 13px;
+            color: #4A4A4A;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .thread-card-footer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .thread-card-footer .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
+        .badge-pinned {
+            background: #0079D3;
+            color: white;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .badge-locked {
+            background: #878A8C;
+            color: white;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* ── REPLY / SINGLE THREAD ── */
+        .thread-post {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .thread-post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            background: #000;
+            display: block;
+        }
+
+        .thread-post-body {
+            padding: 20px;
+        }
+
+        .thread-post-subject {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .thread-post-meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .thread-post-meta .poster-id {
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .thread-post-content {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        /* replies */
+        .replies-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 24px 0 12px;
+        }
+
+        .reply-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .reply-card-body {
+            padding: 14px 16px;
+        }
+
+        .reply-card-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            background: #f6f7f8;
+            display: block;
+            margin-top: 12px;       /* pushes image below the text */
+            border-top: 1px solid var(--border);
+        }
+
+        .reply-meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reply-meta .poster-id {
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .reply-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* breadcrumb */
+        .breadcrumb {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .breadcrumb a {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        /* locked notice */
+        .locked-notice {
+            background: #f6f7f8;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        /* empty states */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--muted);
+        }
+        .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+        .empty-state p { font-size: 15px; }
+
+        /* pagination */
+        .pagination {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination a {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--blue);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+        .pagination a:hover { background: var(--bg); }
+
+        .pagination .current {
+            background: var(--orange);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ── NHENTAI-STYLE PAGINATION ── */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin: 32px 0 16px;
+    flex-wrap: wrap;
+}
+
+.pagination a,
+.pagination span.current,
+.pagination span.ellipsis,
+.pagination span.disabled {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* numbered pages */
+.pagination a.page-num {
+    background: #2b2d42;
+    color: #edf2f4;
+    border: 1px solid #3d3f5c;
+}
+.pagination a.page-num:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+    transform: translateY(-1px);
+}.pagination a.page-num {
+    background: #ffffff;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+.pagination a.page-num:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.pagination a.prev-next {
+    background: #ffffff;
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 16px;
+    padding: 0 14px;
+}
+.pagination a.prev-next:hover {
+    background: var(--bg);
+    transform: translateY(-1px);
+}
+
+.pagination span.disabled {
+    background: #ffffff;
+    color: #c0c0c0;
+    border: 1px solid var(--border);
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* ellipsis dots */
+.pagination span.ellipsis {
+    background: transparent;
+    color: #878A8C;
+    border: none;
+    min-width: 20px;
+    padding: 0;
+    cursor: default;
+    letter-spacing: 1px;
+}
+
+        @media (max-width: 768px) {
+            #page { flex-direction: column; }
+            #sidebar { width: 100%; position: static; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+    <div id="logo">
+        <a href="{% url 'home' %}">
+            <div class="icon">4</div>
+            4ThoughtCJad3
+        </a>
+    </div>
+
+    <div id="board-nav">
+        {% for b in all_boards %}
+            <a href="{% url 'board_detail' b.slug %}">/{{ b.slug }}/</a>
+        {% endfor %}
+    </div>
+
+    <div id="nav-right">
+        <a href="{% url 'home' %}">Home</a>
+    </div>
+</nav>
+
+<!-- PAGE LAYOUT -->
+<div id="page">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <div class="sidebar-card">
+            <h3>Communities</h3>
+            {% for b in all_boards %}
+            <a href="{% url 'board_detail' b.slug %}" class="sidebar-board-link">
+                <div class="board-icon">{{ b.slug|upper|slice:":2" }}</div>
+                <div>
+                    <div style="font-size:14px; font-weight:600;">/{{ b.slug }}/</div>
+                    <div style="font-size:12px; color:#878A8C;">{{ b.title }}</div>
+                </div>
+            </a>
+            {% empty %}
+            <p style="font-size:13px; color:#878A8C;">No boards yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="sidebar-card">
+            <h3>About</h3>
+            <p style="font-size:13px; color:#4A4A4A; line-height:1.6;">
+                4ThoughtCJad3 is an anonymous imageboard. No account needed — just post.
+            </p>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.file-upload-wrapper').forEach(function (wrapper) {
+            const input   = wrapper.querySelector('input[type="file"]');
+            const label   = wrapper.querySelector('.file-upload-btn');
+            const nameEl  = wrapper.querySelector('.file-upload-name');
+            const clearBtn = wrapper.querySelector('.file-upload-clear');
+
+            if (!input || !label || !nameEl) return;
+
+            label.addEventListener('click', function () {
+                input.click();
+            });
+
+            input.addEventListener('change', function () {
+                if (input.files && input.files[0]) {
+                    nameEl.textContent = input.files[0].name;
+                    if (clearBtn) clearBtn.style.display = 'inline';
+                } else {
+                    nameEl.textContent = 'No file chosen';
+                    if (clearBtn) clearBtn.style.display = 'none';
+                }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function () {
+                    input.value = '';
+                    nameEl.textContent = 'No file chosen';
+                    clearBtn.style.display = 'none';
+                });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

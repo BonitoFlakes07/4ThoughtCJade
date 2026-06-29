@@ -1,0 +1,98 @@
+{% extends 'board/base.html' %}
+{% block content %}
+
+<div class="breadcrumb">
+    <a href="{% url 'home' %}">Home</a> &rsaquo;
+    <a href="{% url 'board_detail' board.slug %}">/{{ board.slug }}/</a> &rsaquo;
+    {{ thread.subject|default:"Thread" }}
+</div>
+
+<!-- Original Post -->
+<div class="thread-post">
+    {% if thread.image %}
+        <img class="thread-post-image" src="{{ thread.image.url }}" alt="thread image">
+    {% endif %}
+
+    <div class="thread-post-body">
+        {% if thread.pinned %}<span class="badge-pinned">Pinned</span>{% endif %}
+        {% if thread.locked %}<span class="badge-locked">Locked</span>{% endif %}
+
+        {% if thread.subject %}
+            <div class="thread-post-subject">{{ thread.subject }}</div>
+        {% endif %}
+
+        <div class="thread-post-meta">
+            <span>Anonymous</span>
+            <span class="poster-id">ID: {{ thread.poster_id }}</span>
+            <span>{{ thread.created_at|date:"Y-m-d H:i" }}</span>
+            <span>{{ thread.reply_count }} replies</span>
+        </div>
+
+        <div class="thread-post-content">{{ thread.content|linebreaksbr }}</div>
+    </div>
+</div>
+
+<!-- Replies -->
+{% if replies %}
+    <div class="replies-header">Replies ({{ replies.count }})</div>
+
+    {% for reply in replies %}
+    <div class="reply-card">
+        <div class="reply-card-body">
+            <div class="reply-meta">
+                <span>Anonymous</span>
+                <span class="poster-id">ID: {{ reply.poster_id }}</span>
+                <span>{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="reply-content">{{ reply.content|linebreaksbr }}</div>
+
+            {% if reply.image %}
+                <img class="reply-card-image" src="{{ reply.image.url }}" alt="reply image">
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+{% else %}
+    <div class="empty-state">
+        <p>No replies yet — be the first.</p>
+    </div>
+{% endif %}
+
+<!-- Reply Form -->
+{% if thread.locked %}
+    <div class="locked-notice">This thread is locked. No new replies allowed.</div>
+{% else %}
+<div class="post-form-card" style="margin-top:20px;">
+    <h2>Post a Reply</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-row">
+            <label>Content</label>
+            {{ form.content }}
+        </div>
+        <div class="form-row">
+    <label>Image (optional)</label>
+    <div class="file-upload-wrapper">
+        {{ form.image }}
+        <label class="file-upload-btn" tabindex="0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            Upload Image
+        </label>
+        <span class="file-upload-name">No file chosen</span>
+        <button type="button" class="file-upload-clear" title="Remove">&#x2715;</button>
+    </div>
+</div>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Post Reply</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}

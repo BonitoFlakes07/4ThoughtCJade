@@ -1,0 +1,279 @@
+{% extends 'board/base.html' %}
+{% block content %}
+
+<!-- Board Header -->
+<div class="page-header">
+    <div>
+        <h1>/{{ board.slug }}/ — {{ board.title }}</h1>
+        {% if board.description %}
+            <p>{{ board.description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Thread Masonry Grid -->
+{% if threads %}
+<div class="masonry-grid">
+    {% for thread in threads %}
+    <a href="{% url 'thread_detail' board.slug thread.id %}" class="thread-card">
+        {% if thread.image %}
+            <img class="thread-card-image" src="{{ thread.image.url }}" alt="thread image">
+        {% endif %}
+        <div class="thread-card-body">
+            <div class="thread-card-board">
+                /{{ board.slug }}/
+                {% if thread.pinned %}<span class="badge-pinned">Pinned</span>{% endif %}
+                {% if thread.locked %}<span class="badge-locked">Locked</span>{% endif %}
+            </div>
+            {% if thread.subject %}
+                <div class="thread-card-subject">{{ thread.subject }}</div>
+            {% endif %}
+            <div class="thread-card-content">{{ thread.content }}</div>
+        </div>
+        <div class="thread-card-footer">
+            <span class="stat">{{ thread.reply_count }} replies</span>
+            <span class="stat" style="margin-left:auto;">
+                {{ thread.created_at|date:"M d, Y" }}
+            </span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% if threads.has_other_pages %}
+<nav class="pagination">
+    {% if threads.has_previous %}
+        <a href="?page={{ threads.previous_page_number }}" class="prev-next">&#8592; Prev</a>
+    {% else %}
+        <span class="disabled">&#8592; Prev</span>
+    {% endif %}
+
+    {% for p in page_range %}
+        {% if p == None %}
+            <span class="ellipsis">&#8230;</span>
+        {% elif p == threads.number %}
+            <span class="current">{{ p }}</span>
+        {% else %}
+            <a href="?page={{ p }}" class="page-num">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if threads.has_next %}
+        <a href="?page={{ threads.next_page_number }}" class="prev-next">Next &#8594;</a>
+    {% else %}
+        <span class="disabled">Next &#8594;</span>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <p>No threads yet — hit the + button to start one.</p>
+</div>
+{% endif %}
+
+
+<!-- ── FLOATING ACTION BUTTON ── -->
+<button class="fab" id="fabBtn" onclick="openModal()" title="New Thread">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span>New Thread</span>
+</button>
+
+
+<!-- ── MODAL OVERLAY ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-box">
+
+        <div class="modal-header">
+            <h2>Start a Thread in /{{ board.slug }}/</h2>
+            <button class="modal-close" onclick="closeModal(null)">&#x2715;</button>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="modal-form">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <label>Subject</label>
+                {{ form.subject }}
+            </div>
+
+            <div class="form-row">
+                <label>Content</label>
+                {{ form.content }}
+            </div>
+
+            <div class="form-row">
+                <label>Image (optional)</label>
+                <div class="file-upload-wrapper">
+                    {{ form.image }}
+                    <label class="file-upload-btn" tabindex="0">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        Upload Image
+                    </label>
+                    <span class="file-upload-name">No file chosen</span>
+                    <button type="button" class="file-upload-clear" title="Remove">&#x2715;</button>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal(null)">Cancel</button>
+                <button type="submit" class="btn-primary">Post Thread</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+
+<!-- ── STYLES ── -->
+<style>
+    /* Floating button */
+    .fab {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        background: var(--orange);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 14px 22px;
+        font-size: 15px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(255,69,0,0.45);
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+        z-index: 200;
+    }
+    .fab:hover {
+        background: var(--orange-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255,69,0,0.5);
+    }
+    .fab:active { transform: translateY(0); }
+
+    /* Modal overlay */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 300;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open {
+        display: flex;
+    }
+
+    /* Modal box */
+    .modal-box {
+        background: var(--card-bg);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 540px;
+        box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        overflow: hidden;
+        animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: var(--muted);
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px;
+        border-radius: 4px;
+        transition: color 0.15s, background 0.15s;
+    }
+    .modal-close:hover {
+        color: var(--text);
+        background: var(--bg);
+    }
+
+    .modal-form { padding: 20px; }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        padding: 8px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .btn-cancel:hover { background: var(--bg); }
+</style>
+
+
+<!-- ── SCRIPT ── -->
+<script>
+    function openModal() {
+        document.getElementById('modalOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(event) {
+        // if clicking inside the box, do nothing
+        if (event && event.target !== document.getElementById('modalOverlay')) return;
+        document.getElementById('modalOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    // close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('modalOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    });
+</script>
+
+{% endblock %}

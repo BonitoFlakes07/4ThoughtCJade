@@ -1,0 +1,33 @@
+{% extends 'board/base.html' %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Welcome to FourThoughtCJad</h1>
+        <p>Pick a community and start posting — no account needed.</p>
+    </div>
+</div>
+
+<div class="masonry-grid">
+    {% for board in boards %}
+    <a href="{% url 'board_detail' board.slug %}" class="thread-card">
+        <div class="thread-card-body">
+            <div class="thread-card-board">Community</div>
+            <div class="thread-card-subject">/{{ board.slug }}/ — {{ board.title }}</div>
+            {% if board.description %}
+                <div class="thread-card-content">{{ board.description }}</div>
+            {% endif %}
+        </div>
+        <div class="thread-card-footer">
+            <span class="stat">💬 Browse board</span>
+        </div>
+    </a>
+    {% empty %}
+    <div class="empty-state">
+
+        <p>No boards yet. Add one in the <a href="/admin/">admin panel</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
