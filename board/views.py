@@ -61,7 +61,7 @@ def board_detail(request, slug):
     board = get_object_or_404(Board, slug=slug)
     thread_list = board.threads.all()
 
-    paginator = Paginator(thread_list, 10)
+    paginator = Paginator(thread_list, 9)
     page_number = request.GET.get('page')
     threads = paginator.get_page(page_number)
 

@@ -334,28 +334,28 @@
 
         /* ── MASONRY GRID (Pinterest-style) ── */
         .masonry-grid {
-            columns: 3;
-            column-gap: 16px;
-        }
-
-        @media (max-width: 900px) { .masonry-grid { columns: 2; } }
-        @media (max-width: 600px) { .masonry-grid { columns: 1; } }
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+@media (max-width: 900px) { .masonry-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .masonry-grid { grid-template-columns: 1fr; } }
 
         /* ── THREAD CARD ── */
         .thread-card {
-            break-inside: avoid;
-            display: inline-block;
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            margin-bottom: 16px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: box-shadow 0.2s, transform 0.2s;
-            text-decoration: none;
-            color: inherit;
-        }
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, transform 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+}
 
         .thread-card:hover {
             box-shadow: 0 4px 20px rgba(0,0,0,0.14);
@@ -369,8 +369,9 @@
         }
 
         .thread-card-body {
-            padding: 14px;
-        }
+    padding: 14px;
+    flex: 1;
+}
 
         .thread-card-board {
             font-size: 11px;
@@ -444,13 +445,12 @@
             box-shadow: var(--shadow);
         }
 
-        .thread-post-image {
-            width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            background: #000;
-            display: block;
-        }
+        .thread-card-image {
+    width: 100%;
+    height: 200px;
+    display: block;
+    object-fit: cover;
+}
 
         .thread-post-body {
             padding: 20px;
