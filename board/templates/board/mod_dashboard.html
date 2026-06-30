@@ -1,0 +1,251 @@
+{% extends 'board/base.html' %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Moderator Dashboard</h1>
+        <p>Logged in as {{ request.user.username }}</p>
+    </div>
+    <a href="{% url 'mod_logout' %}" class="btn-cancel">Log Out</a>
+</div>
+
+<div class="mod-stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.board_count }}</div>
+        <div class="stat-label">Communities</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.thread_count }}</div>
+        <div class="stat-label">Threads</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.reply_count }}</div>
+        <div class="stat-label">Replies</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.pending_reports }}</div>
+        <div class="stat-label">Pending Reports</div>
+    </div>
+</div>
+
+<!-- Reports -->
+<div class="mod-section">
+    <h2>Pending Reports</h2>
+    <div class="mod-table-wrap">
+        <table class="mod-table">
+            <thead>
+                <tr><th>Content</th><th>Type</th><th>Board</th><th>Reason</th><th>Details</th><th>Reporter</th><th>Date</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for report in pending_reports %}
+                <tr>
+                    <td>
+                        {% if report.thread %}
+                            <a href="{% url 'thread_detail' report.thread.board.slug report.thread.id %}" class="mod-link">
+                                {{ report.thread.subject|default:report.thread.content|truncatechars:40 }}
+                            </a>
+                        {% elif report.reply %}
+                            <a href="{% url 'thread_detail' report.reply.thread.board.slug report.reply.thread.id %}" class="mod-link">
+                                {{ report.reply.content|default:"(image only)"|truncatechars:40 }}
+                            </a>
+                        {% endif %}
+                    </td>
+                    <td>{% if report.thread %}Thread{% else %}Reply{% endif %}</td>
+                    <td>
+                        {% if report.thread %}/{{ report.thread.board.slug }}/{% elif report.reply %}/{{ report.reply.thread.board.slug }}/{% endif %}
+                    </td>
+                    <td>{{ report.get_reason_display }}</td>
+                    <td style="max-width:200px;">{{ report.details|default:"—"|truncatechars:60 }}</td>
+                    <td><span class="poster-id">{{ report.reporter_id }}</span></td>
+                    <td>{{ report.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="mod-actions">
+                            <form method="post" action="{% url 'mod_resolve_report' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-small">Dismiss</button>
+                            </form>
+                            {% if report.thread %}
+                            <form method="post" action="{% url 'mod_delete_thread' report.thread.id %}" style="display:inline;"
+                                  onsubmit="return confirm('Delete this thread and all its replies?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-small btn-danger">Delete</button>
+                            </form>
+                            {% elif report.reply %}
+                            <form method="post" action="{% url 'mod_delete_reply' report.reply.id %}" style="display:inline;"
+                                  onsubmit="return confirm('Delete this reply?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-small btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="color:var(--muted);">No pending reports.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Communities -->
+<div class="mod-section">
+    <h2>Communities</h2>
+    <div class="mod-table-wrap">
+        <table class="mod-table">
+            <thead><tr><th>Board</th><th>Title</th><th>Threads</th><th></th></tr></thead>
+            <tbody>
+                {% for board in boards %}
+                <tr>
+                    <td><a href="{% url 'board_detail' board.slug %}" class="mod-link">/{{ board.slug }}/</a></td>
+                    <td>{{ board.title }}</td>
+                    <td>{{ board.thread_count }}</td>
+                    <td>
+                        <form method="post" action="{% url 'mod_delete_board' board.id %}"
+                              onsubmit="return confirm('Delete /{{ board.slug }}/ and all its threads? This cannot be undone.');"
+                              style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-small btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="color:var(--muted);">No communities yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Threads -->
+<div class="mod-section">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+        <h2 style="margin-bottom:0;">Threads</h2>
+        <form method="get" class="mod-filter-form">
+            <select name="board" onchange="this.form.submit()">
+                <option value="">All boards</option>
+                {% for b in all_boards %}
+                <option value="{{ b.slug }}" {% if selected_board == b.slug %}selected{% endif %}>/{{ b.slug }}/</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="mod-table-wrap">
+        <table class="mod-table">
+            <thead>
+                <tr><th>Subject</th><th>Board</th><th>Poster</th><th>Replies</th><th>Date</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for thread in threads %}
+                <tr>
+                    <td>
+                        <a href="{% url 'thread_detail' thread.board.slug thread.id %}" class="mod-link">
+                            {{ thread.subject|default:thread.content|truncatechars:40 }}
+                        </a>
+                    </td>
+                    <td>/{{ thread.board.slug }}/</td>
+                    <td><span class="poster-id">{{ thread.poster_id }}</span></td>
+                    <td>{{ thread.reply_total }}</td>
+                    <td>{{ thread.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if thread.pinned %}<span class="badge-pinned">Pinned</span>{% endif %}
+                        {% if thread.locked %}<span class="badge-locked">Locked</span>{% endif %}
+                    </td>
+                    <td>
+                        <div class="mod-actions">
+                            <form method="post" action="{% url 'mod_toggle_pin' thread.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="redirect_to" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn-small">{% if thread.pinned %}Unpin{% else %}Pin{% endif %}</button>
+                            </form>
+                            <form method="post" action="{% url 'mod_toggle_lock' thread.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="redirect_to" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn-small">{% if thread.locked %}Unlock{% else %}Lock{% endif %}</button>
+                            </form>
+                            <form method="post" action="{% url 'mod_delete_thread' thread.id %}" style="display:inline;"
+                                  onsubmit="return confirm('Delete this thread and all its replies?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="redirect_to" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn-small btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="color:var(--muted);">No threads found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Moderation Log -->
+<div class="mod-section">
+    <h2>Moderation Log</h2>
+    <div class="mod-table-wrap">
+        <table class="mod-table">
+            <thead><tr><th>Action</th><th>Detail</th><th>By</th><th>When</th></tr></thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td><strong>{{ log.action }}</strong></td>
+                    <td>{{ log.detail }}</td>
+                    <td>{{ log.performed_by }}</td>
+                    <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="color:var(--muted);">No actions logged yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<style>
+    .mod-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .mod-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+    .stat-number { font-size: 28px; font-weight: 700; color: var(--orange); }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    .mod-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+    .mod-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+    .mod-table-wrap { overflow-x: auto; }
+    .mod-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .mod-table th {
+        text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted);
+        border-bottom: 2px solid var(--border); white-space: nowrap;
+    }
+    .mod-table td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .mod-table tr:last-child td { border-bottom: none; }
+
+    .mod-link { color: var(--blue); text-decoration: none; font-weight: 600; }
+    .mod-link:hover { text-decoration: underline; }
+
+    .poster-id { background: var(--bg); padding: 2px 8px; border-radius: 10px; font-family: monospace; font-size: 11px; font-weight: 600; }
+
+    .mod-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .btn-small {
+        background: transparent; border: 1px solid var(--border); color: var(--text);
+        font-size: 12px; font-weight: 600; font-family: inherit; padding: 5px 10px;
+        border-radius: 14px; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-small:hover { background: var(--bg); }
+
+    .btn-danger { border-color: var(--orange); color: var(--orange); }
+    .btn-danger:hover { background: var(--orange); color: white; }
+
+    .mod-filter-form select {
+        border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px;
+        font-size: 13px; font-family: inherit; background: var(--bg); color: var(--text); cursor: pointer;
+    }
+</style>
+
+{% endblock %}

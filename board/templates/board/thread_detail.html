@@ -26,6 +26,8 @@
             <span class="poster-id">ID: {{ thread.poster_id }}</span>
             <span>{{ thread.created_at|date:"Y-m-d H:i" }}</span>
             <span>{{ thread.reply_count }} replies</span>
+            <button type="button" class="report-link"
+    data-report-url="{% url 'report_thread' board.slug thread.id %}">Report</button>
         </div>
 
         <div class="thread-post-content">{{ thread.content|linebreaksbr }}</div>
@@ -43,6 +45,8 @@
                 <span>Anonymous</span>
                 <span class="poster-id">ID: {{ reply.poster_id }}</span>
                 <span>{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+                <button type="button" class="report-link"
+    data-report-url="{% url 'report_reply' board.slug thread.id reply.id %}">Report</button>
             </div>
             <div class="reply-content">{{ reply.content|linebreaksbr }}</div>
 
@@ -67,32 +71,84 @@
     <h2>Post a Reply</h2>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="form-error">{{ form.non_field_errors }}</div>
+        {% endif %}
         <div class="form-row">
-            <label>Content</label>
+            <label>Reply (optional)</label>
             {{ form.content }}
         </div>
         <div class="form-row">
-    <label>Image (optional)</label>
-    <div class="file-upload-wrapper">
-        {{ form.image }}
-        <label class="file-upload-btn" tabindex="0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            Upload Image
-        </label>
-        <span class="file-upload-name">No file chosen</span>
-        <button type="button" class="file-upload-clear" title="Remove">&#x2715;</button>
-    </div>
-</div>
+            <label>Image (optional)</label>
+            <div class="file-upload-wrapper">
+                {{ form.image }}
+                <label class="file-upload-btn" tabindex="0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Upload Image
+                </label>
+                <span class="file-upload-name">No file chosen</span>
+                <button type="button" class="file-upload-clear" title="Remove">&#x2715;</button>
+            </div>
+        </div>
         <div class="form-actions">
             <button type="submit" class="btn-primary">Post Reply</button>
         </div>
     </form>
 </div>
 {% endif %}
+
+
+<!-- ── REPORT MODAL ── -->
+<div class="modal-overlay" id="reportModalOverlay" onclick="closeReportModal(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Report Content</h2>
+            <button class="modal-close" onclick="closeReportModal(null)">&#x2715;</button>
+        </div>
+        <form method="post" id="reportForm" class="modal-form">
+            {% csrf_token %}
+            <div class="form-row">
+                <label>Reason</label>
+                <select name="reason" required>
+                    <option value="spam">Spam</option>
+                    <option value="illegal">Illegal content</option>
+                    <option value="harassment">Harassment / abuse</option>
+                    <option value="off_topic">Off-topic / rule violation</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Details (optional)</label>
+                <textarea name="details" rows="3" placeholder="Additional details (optional)"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeReportModal(null)">Cancel</button>
+                <button type="submit" class="btn-primary">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openReportModal(url) {
+        document.getElementById('reportForm').action = url;
+        document.getElementById('reportModalOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeReportModal(event) {
+        if (event && event.target !== document.getElementById('reportModalOverlay')) return;
+        document.getElementById('reportModalOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeReportModal(null);
+    });
+</script>
 
 {% endblock %}

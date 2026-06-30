@@ -1,0 +1,30 @@
+{% extends 'board/base.html' %}
+{% block content %}
+
+<div style="max-width:400px; margin:60px auto;">
+    <div class="post-form-card">
+        <h2 style="margin-bottom:6px;">Moderator Login</h2>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Staff access only.</p>
+
+        {% if error %}
+        <div class="form-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <label>Username</label>
+                <input type="text" name="username" required autofocus>
+            </div>
+            <div class="form-row">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Log In</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
