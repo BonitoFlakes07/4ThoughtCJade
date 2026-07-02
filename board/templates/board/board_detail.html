@@ -11,19 +11,60 @@
     </div>
 </div>
 
+<div class="post-form-card" style="margin-bottom:16px;">
+    <button type="button" class="file-upload-btn" id="filterToggleBtn" aria-expanded="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+        Filters
+    </button>
+
+    <form method="get" class="thread-filters" id="threadFiltersPanel" style="display:none;">
+        <div class="filter-item">
+            <label for="sort">Sort</label>
+            <select id="sort" name="sort">
+                <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recent activity</option>
+                <option value="most_replies" {% if sort == 'most_replies' %}selected{% endif %}>Most replies</option>
+                <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="per_page">Threads per page</label>
+            <select id="per_page" name="per_page">
+                <option value="9" {% if per_page == 9 %}selected{% endif %}>9</option>
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                <option value="40" {% if per_page == 40 %}selected{% endif %}>40</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="min_replies">Minimum replies</label>
+            <input id="min_replies" name="min_replies" type="number" min="0" value="{{ min_replies }}">
+        </div>
+        <label class="filter-check">
+            <input type="checkbox" name="hide_nsfw" value="1" {% if hide_nsfw %}checked{% endif %}>
+            Hide NSFW
+        </label>
+        <button type="submit" class="btn-primary">Apply Filters</button>
+    </form>
+</div>
+
 <!-- Thread Masonry Grid -->
 {% if threads %}
 <div class="masonry-grid">
     {% for thread in threads %}
     <a href="{% url 'thread_detail' board.slug thread.id %}" class="thread-card">
         {% if thread.image %}
-            <img class="thread-card-image" src="{{ thread.image.url }}" alt="thread image">
+            <img class="thread-card-image {% if thread.nsfw %}nsfw-blur{% endif %}" src="{{ thread.image.url }}" alt="thread image">
         {% endif %}
         <div class="thread-card-body">
             <div class="thread-card-board">
                 /{{ board.slug }}/
                 {% if thread.pinned %}<span class="badge-pinned">Pinned</span>{% endif %}
                 {% if thread.locked %}<span class="badge-locked">Locked</span>{% endif %}
+                {% if thread.nsfw %}<span class="badge-nsfw">NSFW</span>{% endif %}
             </div>
             {% if thread.subject %}
                 <div class="thread-card-subject">{{ thread.subject }}</div>
@@ -43,7 +84,7 @@
 {% if threads.has_other_pages %}
 <nav class="pagination">
     {% if threads.has_previous %}
-        <a href="?page={{ threads.previous_page_number }}" class="prev-next">&#8592; Prev</a>
+        <a href="?page={{ threads.previous_page_number }}&sort={{ sort }}&per_page={{ per_page }}&min_replies={{ min_replies }}{% if hide_nsfw %}&hide_nsfw=1{% endif %}" class="prev-next">&#8592; Prev</a>
     {% else %}
         <span class="disabled">&#8592; Prev</span>
     {% endif %}
@@ -54,12 +95,12 @@
         {% elif p == threads.number %}
             <span class="current">{{ p }}</span>
         {% else %}
-            <a href="?page={{ p }}" class="page-num">{{ p }}</a>
+            <a href="?page={{ p }}&sort={{ sort }}&per_page={{ per_page }}&min_replies={{ min_replies }}{% if hide_nsfw %}&hide_nsfw=1{% endif %}" class="page-num">{{ p }}</a>
         {% endif %}
     {% endfor %}
 
     {% if threads.has_next %}
-        <a href="?page={{ threads.next_page_number }}" class="prev-next">Next &#8594;</a>
+        <a href="?page={{ threads.next_page_number }}&sort={{ sort }}&per_page={{ per_page }}&min_replies={{ min_replies }}{% if hide_nsfw %}&hide_nsfw=1{% endif %}" class="prev-next">Next &#8594;</a>
     {% else %}
         <span class="disabled">Next &#8594;</span>
     {% endif %}
@@ -125,6 +166,9 @@
                     <button type="button" class="file-upload-clear" title="Remove">&#x2715;</button>
                 </div>
             </div>
+            <div class="form-row">
+                <label>{{ form.nsfw }} NSFW (blur by default)</label>
+            </div>
 
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" onclick="closeModal(null)">Cancel</button>
@@ -138,6 +182,34 @@
 
 <!-- ── STYLES ── -->
 <style>
+    .thread-filters {
+        display: flex;
+        align-items: end;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+    .filter-item { min-width: 140px; }
+    .filter-item label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+    .filter-item select,
+    .filter-item input {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 10px;
+        background: var(--bg);
+    }
+    .filter-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+    }
     /* Floating button */
     .fab {
         position: fixed;
@@ -255,6 +327,16 @@
 
 <!-- ── SCRIPT ── -->
 <script>
+    const filterToggleBtn = document.getElementById('filterToggleBtn');
+    const threadFiltersPanel = document.getElementById('threadFiltersPanel');
+    if (filterToggleBtn && threadFiltersPanel) {
+        filterToggleBtn.addEventListener('click', function () {
+            const isOpen = threadFiltersPanel.style.display === 'flex';
+            threadFiltersPanel.style.display = isOpen ? 'none' : 'flex';
+            filterToggleBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+    }
+
     function openModal() {
         document.getElementById('modalOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';

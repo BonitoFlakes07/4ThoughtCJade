@@ -1,0 +1,42 @@
+<div class="reply-card" id="reply-{{ node.reply.id }}">
+    <div class="reply-card-body">
+        <div class="reply-actions reply-actions-top">
+            <div class="meatball-menu">
+                <button type="button" class="meatball-btn" aria-label="Reply actions">&#8942;</button>
+                <div class="meatball-dropdown">
+                    <button type="button" class="menu-item menu-reply" data-parent-id="{{ node.reply.id }}" data-poster-id="{{ node.reply.poster_id }}">Reply user</button>
+                    <button type="button" class="menu-item menu-report report-link" data-report-url="{% url 'report_reply' board.slug thread.id node.reply.id %}">Report user</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="reply-meta">
+            <span>Anonymous</span>
+            <span class="poster-id">ID: {{ node.reply.poster_id }}</span>
+            <span>{{ node.reply.created_at|date:"Y-m-d H:i" }}</span>
+            {% if node.reply.nsfw %}<span class="badge-nsfw">NSFW</span>{% endif %}
+        </div>
+        {% if node.reply.parent %}
+            <div class="reply-parent">Replying to Anon ID: {{ node.reply.parent.poster_id }}</div>
+        {% endif %}
+        <div class="reply-content">{{ node.reply.content|linebreaksbr }}</div>
+
+        {% if node.reply.image %}
+            <div class="nsfw-image-wrap">
+                <img class="reply-card-image {% if node.reply.nsfw %}nsfw-blur{% endif %}" src="{{ node.reply.image.url }}" alt="reply image">
+                {% if node.reply.nsfw %}
+                    <button type="button" class="unblur-btn">Unblur</button>
+                {% endif %}
+            </div>
+        {% endif %}
+        <div class="reply-inline-slot"></div>
+    </div>
+
+    {% if node.children %}
+        <div class="reply-children">
+            {% for node in node.children %}
+                {% include 'board/reply_node.html' with node=node board=board thread=thread %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

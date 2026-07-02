@@ -30,6 +30,57 @@
             min-height: 100vh;
         }
 
+        .report-link {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+.report-link:hover { color: var(--orange); }
+
+.form-row select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    cursor: pointer;
+}
+.form-row select:focus {
+    outline: none;
+    border-color: var(--blue);
+    background: white;
+}
+
+.messages-wrap {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.message-toast {
+    background: var(--card-bg);
+    border-left: 4px solid var(--blue);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    max-width: 320px;
+}
+.message-toast.success { border-left-color: #2bb673; }
+.message-toast.error { border-left-color: var(--orange); }
+
         /* ── NAVBAR ── */
         #navbar {
             background: var(--nav-bg);
@@ -245,7 +296,8 @@
         }
 
         .form-row input[type="text"],
-        .form-row textarea {
+.form-row input[type="password"],
+.form-row textarea {
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -324,6 +376,32 @@
     display: none;
 }
 
+.form-error {
+    background: #fff0ed;
+    border: 1px solid var(--orange);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #cc3700;
+    font-weight: 500;
+}
+.btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-cancel:hover { background: var(--bg); }
+
 .file-upload-clear:hover { color: var(--orange); }
 
         .form-actions {
@@ -334,28 +412,28 @@
 
         /* ── MASONRY GRID (Pinterest-style) ── */
         .masonry-grid {
-            columns: 3;
-            column-gap: 16px;
-        }
-
-        @media (max-width: 900px) { .masonry-grid { columns: 2; } }
-        @media (max-width: 600px) { .masonry-grid { columns: 1; } }
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+@media (max-width: 900px) { .masonry-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .masonry-grid { grid-template-columns: 1fr; } }
 
         /* ── THREAD CARD ── */
         .thread-card {
-            break-inside: avoid;
-            display: inline-block;
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            margin-bottom: 16px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: box-shadow 0.2s, transform 0.2s;
-            text-decoration: none;
-            color: inherit;
-        }
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, transform 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+}
 
         .thread-card:hover {
             box-shadow: 0 4px 20px rgba(0,0,0,0.14);
@@ -363,14 +441,16 @@
         }
 
         .thread-card-image {
-            width: 100%;
-            display: block;
-            object-fit: cover;
-        }
+    width: 100%;
+    height: 200px;
+    display: block;
+    object-fit: cover;
+}
 
         .thread-card-body {
-            padding: 14px;
-        }
+    padding: 14px;
+    flex: 1;
+}
 
         .thread-card-board {
             font-size: 11px;
@@ -433,6 +513,35 @@
             border-radius: 10px;
             font-weight: 600;
         }
+
+        .badge-nsfw {
+            background: #da1e37;
+            color: white;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .nsfw-blur { filter: blur(16px); }
+
+        .nsfw-image-wrap { position: relative; }
+
+        .unblur-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 10px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .unblur-btn:hover { background: #fff; }
 
         /* ── REPLY / SINGLE THREAD ── */
         .thread-post {
@@ -536,6 +645,163 @@
         .reply-content {
             font-size: 14px;
             line-height: 1.6;
+        }
+
+        .reply-parent {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .reply-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .reply-actions-top {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .meatball-menu { position: relative; }
+
+        .meatball-btn {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg);
+            color: var(--text);
+            padding: 4px 10px;
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .meatball-btn:hover { background: #fff; }
+
+        .meatball-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            min-width: 140px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 20;
+            padding: 6px;
+        }
+        .meatball-menu.open .meatball-dropdown { display: block; }
+
+        .menu-item {
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 13px;
+            border-radius: 8px;
+            padding: 7px 8px;
+            cursor: pointer;
+        }
+        .menu-item:hover { background: var(--bg); }
+
+        .reply-inline-slot { margin-top: 10px; }
+
+        .reply-children {
+            margin-left: 24px;
+            border-left: 2px solid var(--border);
+            padding-left: 10px;
+            margin-bottom: 10px;
+        }
+
+        .reply-btn {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg);
+            color: var(--text);
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .reply-btn:hover { background: #fff; }
+
+        .reply-target-banner {
+            margin-top: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            gap: 8px;
+        }
+
+        .emoji-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .emoji-btn {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 15px;
+            line-height: 1;
+        }
+        .emoji-btn:hover { background: var(--bg); }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(2px);
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 540px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--muted);
+            cursor: pointer;
+        }
+        .modal-form { padding: 20px; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
         }
 
         /* breadcrumb */
@@ -695,6 +961,14 @@
 </head>
 <body>
 
+    {% if messages %}
+<div class="messages-wrap">
+    {% for message in messages %}
+    <div class="message-toast {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <!-- NAVBAR -->
 <nav id="navbar">
     <div id="logo">
@@ -711,8 +985,8 @@
     </div>
 
     <div id="nav-right">
-        <a href="{% url 'home' %}">Home</a>
-    </div>
+    <a href="{% url 'mod_dashboard' %}" style="margin-left:8px; background:transparent; color:var(--muted); border:1px solid var(--border);">Moderate</a>
+</div>
 </nav>
 
 <!-- PAGE LAYOUT -->
